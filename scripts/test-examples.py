@@ -62,8 +62,7 @@ def clone_repos(config, target):
         exit(-2)
     for g_uri in git_uris:
         try:
-            cloned_repo = git.Git(target).clone(g_uri)
-            if cloned_repo:
+            if cloned_repo := git.Git(target).clone(g_uri):
                 cloned_repos.append(cloned_repo)
                 Out.info(f"Repository [{g_uri}] cloned to [{target}].")
         except git.exc.GitCommandError as git_error:
@@ -82,7 +81,7 @@ def infer_build_file(project_dir):
     if os.path.isfile(f"{project_dir}/build.gradle.kts"):
         build_file = f"{project_dir}/build.gradle.kts"
     elif os.path.isfile(f"{project_dir}/build.gradle"):
-        Out.error(f"We only support Gradle Kotlin (build.gradle.kts) files.")
+        Out.error("We only support Gradle Kotlin (build.gradle.kts) files.")
         sys.exit(2)
     else:
         Out.error(f"Unable to infer the build file for project [{project_dir}]~")
@@ -92,12 +91,11 @@ def infer_build_file(project_dir):
 
 def infer_gradle_settings_file(project_dir):
     if os.path.isfile(f"{project_dir}/settings.gradle.kts"):
-        file = f"{project_dir}/settings.gradle.kts"
+        return f"{project_dir}/settings.gradle.kts"
     elif os.path.isfile(f"{project_dir}/settings.gradle"):
-        file = f"{project_dir}/settings.gradle"
+        return f"{project_dir}/settings.gradle"
     else:
-        file = ""
-    return file
+        return ""
 
 
 def find_replace_version(content, version):
@@ -106,15 +104,12 @@ def find_replace_version(content, version):
 
 
 def update_build(build_file, version):
-    file = open(build_file, 'r')
-    file_data = file.read()
-    file.close()
-
+    with open(build_file, 'r') as file:
+        file_data = file.read()
     file_data = find_replace_version(file_data, version)
 
-    file = open(build_file, 'w')
-    file.write(file_data)
-    file.close()
+    with open(build_file, 'w') as file:
+        file.write(file_data)
 
 
 def run_example_build(project_dir, build_file="", settings_file=""):
@@ -214,7 +209,7 @@ def main(argv):
             shutil.rmtree(projects_dir)
         except Exception as error:
             Out.error(f"Failed deleting {projects_dir}.", error)
-    Out.ok(f"Build successful.")
+    Out.ok("Build successful.")
 
 
 if __name__ == "__main__":
